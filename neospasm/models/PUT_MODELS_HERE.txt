@@ -1,0 +1,5 @@
+Taruh 3 file di sini:
+  model_exp_dense.pt
+  model_pose_dense.pt
+  model_videomae_exp1.pt
+Ambil dari Google Drive: SEC 2026/Modelling/runs/<run>/model_*.pt
