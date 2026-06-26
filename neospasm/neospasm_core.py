@@ -7,7 +7,8 @@ import numpy as np
 import streamlit as st
 
 # ---------------- KONFIGURASI ----------------
-MODELS_DIR = "models"
+_HERE = os.path.dirname(os.path.abspath(__file__))
+MODELS_DIR = os.path.join(_HERE, "models")
 RGB_PT  = os.path.join(MODELS_DIR, "model_exp_dense.pt")
 POSE_PT = os.path.join(MODELS_DIR, "model_pose_dense.pt")
 VMAE_PT = os.path.join(MODELS_DIR, "model_videomae_exp1.pt")
