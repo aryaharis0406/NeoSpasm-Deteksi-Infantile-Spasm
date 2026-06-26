@@ -13,6 +13,9 @@ POSE_PT = os.path.join(MODELS_DIR, "model_pose_dense.pt")
 VMAE_PT = os.path.join(MODELS_DIR, "model_videomae_exp1.pt")
 VMAE_CKPT = "MCG-NJU/videomae-base-finetuned-kinetics"
 
+# Model RGB besar (119MB) diunduh otomatis dari Drive saat app start (tak perlu di GitHub).
+RGB_GDRIVE_ID = "1ARIr0cJi__l3N5DB3PVB15PYG1Xkprn-"
+
 W_RGB, W_POSE, W_VMAE = 0.1, 0.3, 0.6          # bobot fusi terbaik (grid 7_fusion3)
 RGB_FRAMES, RGB_SIZE = 16, 112
 POSE_FRAMES = 32
@@ -69,6 +72,22 @@ def inject_css():
     </style>""", unsafe_allow_html=True)
 
 
+def _ensure_rgb_model():
+    """Unduh model RGB besar dari Google Drive bila belum ada (untuk Streamlit Cloud)."""
+    if os.path.exists(RGB_PT):
+        return
+    os.makedirs(MODELS_DIR, exist_ok=True)
+    url = f"https://drive.google.com/uc?id={RGB_GDRIVE_ID}"
+    with st.spinner("Mengunduh model RGB (119MB) sekali saja..."):
+        try:
+            import gdown
+            gdown.download(url, RGB_PT, quiet=False)
+        except Exception as e:
+            raise RuntimeError(
+                f"Gagal mengunduh model RGB dari Drive: {e}. "
+                "Pastikan file di-share 'Anyone with the link'.")
+
+
 # ---------------- MODEL ----------------
 @st.cache_resource(show_spinner="Memuat model (sekali saja)...")
 def load_all():
@@ -78,6 +97,7 @@ def load_all():
     from ultralytics import YOLO
     dev = "cuda" if torch.cuda.is_available() else "cpu"
 
+    _ensure_rgb_model()
     rgb = r2plus1d_18(weights=None); rgb.fc = nn.Linear(rgb.fc.in_features, 1)
     ck = torch.load(RGB_PT, map_location="cpu"); rgb.load_state_dict(ck["state_dict"]); rgb.to(dev).eval()
 
@@ -220,4 +240,5 @@ def analyze_video(M, path, progress=None):
     return res, dur
 
 def models_missing():
-    return [p for p in (RGB_PT, POSE_PT, VMAE_PT) if not os.path.exists(p)]
+    # RGB diunduh otomatis dari Drive -> cukup cek 2 file kecil yang ada di repo
+    return [p for p in (POSE_PT, VMAE_PT) if not os.path.exists(p)]
